@@ -2,13 +2,6 @@ provider "aws" {
   region = "eu-west-2"
 }
 
-variable "cidr_block" {}
-variable "subnet_cidr_block" {}
-variable "availability_zone" {}
-variable "env_prefix" {}
-variable "my_ip" {}
-variable "instance_type" {}
-variable "public_key_location" {}
 
 resource "aws_vpc" "app-vpc" {
   cidr_block = var.cidr_block
@@ -89,14 +82,6 @@ data "aws_ami" "latest-amazon-linux-image" {
 }
 
 
-output "aws_ami_id" {
-  value = data.aws_ami.latest-amazon-linux-image.id
-}
-
-output "aws_sg_id" {
-  value = aws_security_group.app-sg
-}
-
 resource "aws_key_pair" "ssh-key" {
   key_name   = "server-key"
   public_key = file(var.public_key_location)
@@ -112,7 +97,9 @@ resource "aws_instance" "app-ec2-server" {
   availability_zone      = var.availability_zone
 
   associate_public_ip_address = true
-  key_name                    = aws_key_pair.ssh-key.key_name
+  key_name = aws_key_pair.ssh-key.key_name
+
+  user_data = file("script.sh")
 
   tags = {
     Name = "${var.env_prefix}-server"
